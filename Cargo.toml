@@ -1,0 +1,3 @@
+[workspace]
+members = ["effectengine-cli"]
+resolver = "3"
