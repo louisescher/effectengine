@@ -2,7 +2,7 @@ use image::{DynamicImage, ImageBuffer, Rgba};
 
 use crate::effects::bayer::apply_diffusion_kernel;
 
-pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+pub fn effect(image: &mut DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	let bayer_8_matrix: Vec<Vec<u8>> = vec![
 		vec![0, 128, 32, 160, 8, 136, 40, 168],
 		vec![192, 64, 224, 96, 200, 72, 232, 104],

@@ -64,7 +64,7 @@ fn main() {
 
 	let input_image_res = input_image_reader.decode();
 
-	let input_image = match input_image_res {
+	let mut input_image = match input_image_res {
 		Ok(_) => input_image_res.unwrap(),
 		Err(_) => {
 			eprintln!("The image at the given input path could not be decoded.");
@@ -73,7 +73,7 @@ fn main() {
 	};
 
 	let new_image = DynamicImage::ImageRgba8(match args.effect {
-		ValidEffect::Bayer8 => bayer_8::effect(&input_image),
+		ValidEffect::Bayer8 => bayer_8::effect(&mut input_image),
 		ValidEffect::Bayer16 => bayer_16::effect(&input_image),
 		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image),
 	});
