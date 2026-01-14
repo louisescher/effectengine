@@ -11,7 +11,7 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	// How big the pixels in the final image should be
 	let processed_pixel_size: usize = 8;
 
-	let pixelized_width = (image_width) / processed_pixel_size;
+	let pixelized_width = image_width / processed_pixel_size;
 
 	let mut new_pixels: Vec<Vec<(u32, u32, Rgba<u8>)>> = vec![Vec::new(); pixelized_width];
 
