@@ -22,9 +22,12 @@ fn main() {
 
 	let args = EffectEngineCliArgs {
 		effect: match effect.as_str() {
+			"bayer-2" => ValidEffect::Bayer2,
+			"bayer-4" => ValidEffect::Bayer4,
 			"bayer-8" => ValidEffect::Bayer8,
 			"bayer-16" => ValidEffect::Bayer16,
 			"floyd-steinberg" => ValidEffect::FloydSteinberg,
+			"pixelate" => ValidEffect::Pixelate,
 			_ => {
 				eprintln!("Invalid effect. Please provide one of the following effects as the first argument:");
 
@@ -73,9 +76,12 @@ fn main() {
 	};
 
 	let new_image = DynamicImage::ImageRgba8(match args.effect {
+		ValidEffect::Bayer2 => bayer_2::effect(&mut input_image),
+		ValidEffect::Bayer4 => bayer_4::effect(&mut input_image),
 		ValidEffect::Bayer8 => bayer_8::effect(&mut input_image),
-		ValidEffect::Bayer16 => bayer_16::effect(&input_image),
+		ValidEffect::Bayer16 => bayer_16::effect(&mut input_image),
 		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image),
+		ValidEffect::Pixelate => pixelate::effect(&input_image)
 	});
 
 	let formatted_new_image = match input_image.color() {
