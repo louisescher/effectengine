@@ -19,6 +19,8 @@ fn main() {
 	let effect = std::env::args().nth(1).expect(format!("No effect given. Please use one of the following effects: {}", VALID_EFFECTS.join(", ")).as_str());
 	let input_path = std::env::args().nth(2).expect("No input image given. Please provide the path to an input image.");
 	let output_path = std::env::args().nth(3);
+	let color_1 = std::env::args().nth(4);
+	let color_2 = std::env::args().nth(5);
 
 	let args = EffectEngineCliArgs {
 		effect: match effect.as_str() {
@@ -28,6 +30,8 @@ fn main() {
 			"bayer-16" => ValidEffect::Bayer16,
 			"floyd-steinberg" => ValidEffect::FloydSteinberg,
 			"pixelate" => ValidEffect::Pixelate,
+			"quantize" => ValidEffect::Quantize,
+			"pixel-sort" => ValidEffect::PixelSort,
 			_ => {
 				eprintln!("Invalid effect. Please provide one of the following effects as the first argument:");
 
@@ -80,8 +84,10 @@ fn main() {
 		ValidEffect::Bayer4 => bayer_4::effect(&mut input_image),
 		ValidEffect::Bayer8 => bayer_8::effect(&mut input_image),
 		ValidEffect::Bayer16 => bayer_16::effect(&mut input_image),
-		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image),
-		ValidEffect::Pixelate => pixelate::effect(&input_image)
+		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image, color_1, color_2),
+		ValidEffect::Pixelate => pixelate::effect(&input_image),
+		ValidEffect::Quantize => quantize::effect(&input_image),
+		ValidEffect::PixelSort => pixel_sort::effect(&input_image)
 	});
 
 	let formatted_new_image = match input_image.color() {

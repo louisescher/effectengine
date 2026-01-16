@@ -1,6 +1,8 @@
+use std::process::exit;
+
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
-use crate::util::clamp_to_u8_space;
+use crate::util::{clamp_to_u8_space, hex_to_rgb, is_hex_color};
 
 /// An implementation of the Floyd-Steinberg dithering algorithm. When a pixel's error is calculated, the
 /// error is diffused down to other pixels with the following pattern (X is the current pixel, the numbers
@@ -17,9 +19,20 @@ use crate::util::clamp_to_u8_space;
 /// The algorithm does this by storing the diffused error in a one-dimensional array with the size equal
 /// to the width of the image. Due to the divisor being 16, which is a multiple of two, bit-shifting can
 /// be used for better performance.
-pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+pub fn effect(image: &DynamicImage, color_1: Option<String>, color_2: Option<String>) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	let pixels = image.pixels();
 	let image_width = image.width() as usize;
+
+	let dark_color_hex = color_1.unwrap_or(String::from("#000000"));
+	let light_color_hex = color_2.unwrap_or(String::from("#FFFFFF"));
+
+	if !is_hex_color(dark_color_hex.clone()) || !is_hex_color(light_color_hex.clone()) {
+		eprintln!("Colors must be provided in 6 part hexadecimal format (#000000).");
+		exit(64);
+	}
+
+	let dark_color = hex_to_rgb(dark_color_hex);
+	let light_color = hex_to_rgb(light_color_hex);
 
 	let mut diffusion_array: Vec<i32> = Vec::new();
 	let mut next_diff_err: i32 = 0;
@@ -57,21 +70,11 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 		let adjusted_pixel_color = clamp_to_u8_space(pixel_color + next_diff_err + diff_array_for_row[proper_index]);
 
 		let pixel_error = if adjusted_pixel_color < 128 {
-			new_image.put_pixel(pixel.0, pixel.1, Rgba([
-				0,
-				0,
-				0,
-				255
-			]));
+			new_image.put_pixel(pixel.0, pixel.1, dark_color);
 
 			adjusted_pixel_color
 		} else {
-			new_image.put_pixel(pixel.0, pixel.1, Rgba([
-				255,
-				255,
-				255,
-				255
-			]));
+			new_image.put_pixel(pixel.0, pixel.1, light_color);
 
 			adjusted_pixel_color - 255
 		};
