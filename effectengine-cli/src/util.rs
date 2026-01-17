@@ -52,3 +52,11 @@ pub fn hex_to_rgb(hex: String) -> Rgba<u8> {
 
 	return color;
 }
+
+/// Converts a pixel into a gray-scale version with a luminance calculation.
+pub fn pixel_to_grayscale_value(pixel: (u32, u32, Rgba<u8>)) -> i32 {
+	let pixel_rgb_info = pixel.2.0;
+	let (r, g, b) = (pixel_rgb_info[0] as i32, pixel_rgb_info[1] as i32, pixel_rgb_info[2] as i32);
+
+	return (r * 2126 + g * 7152 + b * 722) / 10000;
+}

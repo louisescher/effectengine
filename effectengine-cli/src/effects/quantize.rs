@@ -1,6 +1,6 @@
-use std::{env::args, process::exit};
+use std::{process::exit};
 
-use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer, Rgba};
 
 use crate::util::{hex_to_rgb, is_hex_color};
 

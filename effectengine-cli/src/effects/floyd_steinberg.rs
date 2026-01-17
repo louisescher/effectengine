@@ -2,7 +2,7 @@ use std::process::exit;
 
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
-use crate::util::{clamp_to_u8_space, hex_to_rgb, is_hex_color};
+use crate::util::{clamp_to_u8_space, hex_to_rgb, is_hex_color, pixel_to_grayscale_value};
 
 /// An implementation of the Floyd-Steinberg dithering algorithm. When a pixel's error is calculated, the
 /// error is diffused down to other pixels with the following pattern (X is the current pixel, the numbers
@@ -99,12 +99,4 @@ pub fn effect(image: &DynamicImage, color_1: Option<String>, color_2: Option<Str
 	}
 
 	return new_image;
-}
-
-/// Converts a pixel into a gray-scale version with a luminance calculation.
-fn pixel_to_grayscale_value(pixel: (u32, u32, Rgba<u8>)) -> i32 {
-	let pixel_rgb_info = pixel.2.0;
-	let (r, g, b) = (pixel_rgb_info[0] as i32, pixel_rgb_info[1] as i32, pixel_rgb_info[2] as i32);
-
-	return (r * 2126 + g * 7152 + b * 722) / 10000;
 }
