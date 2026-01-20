@@ -1,5 +1,5 @@
 /target
-*.png
-*.jpg
-*.jpeg
+test/*.png
+test/*.jpg
+test/*.jpeg
 .DS_store

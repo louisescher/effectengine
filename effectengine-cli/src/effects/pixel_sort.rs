@@ -1,11 +1,79 @@
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
-/// TODO: Pixel Sort
+use crate::util::pixel_to_grayscale_value;
+
+/// TODO: Sort in other directions
 pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	let image_width = image.width();
 	let image_height = image.height();
 
 	let mut new_image = ImageBuffer::new(image_width, image_height);
+
+	let mut pixel_positions: Vec<Vec<Vec<(u32, u32)>>> = Vec::new();
+	let mut pixels_to_be_sorted: Vec<Vec<Vec<(Rgba<u8>, i32)>>> = Vec::new();
+	let mut current_row = 0;
+	let mut interval = 0;
+
+	let total_brightness = image.pixels().fold(0, |acc, pixel| {
+		let grayscale = pixel_to_grayscale_value(pixel) as usize;
+
+		acc + grayscale
+	});
+
+	let avg_brightness = total_brightness / (image_width as usize * image_height as usize);
+
+	for (i, pixel) in image.pixels().enumerate() {
+		let row_check = i / image_width as usize;
+		if row_check > current_row {
+			current_row += 1;
+			interval = 0;
+		}
+
+		if pixel_positions.len() <= current_row {
+			pixel_positions.push(Vec::new());
+			pixels_to_be_sorted.push(Vec::new());
+		}
+
+		if pixel_positions[current_row].len() <= interval {
+			pixel_positions[current_row].push(Vec::new());
+			pixels_to_be_sorted[current_row].push(Vec::new());
+		}
+
+		let grayscale = pixel_to_grayscale_value(pixel);
+
+		if grayscale > avg_brightness as i32 {
+			pixel_positions[current_row][interval].push((
+				pixel.0,
+				pixel.1
+			));
+
+			pixels_to_be_sorted[current_row][interval].push((
+				pixel.2,
+				grayscale
+			));
+		} else {
+			new_image.put_pixel(pixel.0, pixel.1, pixel.2);
+			interval += 1;
+		}
+	}
+
+	let mut i = 0;
+	for interval in pixels_to_be_sorted {
+		let mut j = 0;
+		for mut pixels in interval {
+			pixels.sort_by(|a, b| {
+				a.1.cmp(&b.1)
+			});
+
+			for (k, pixel) in pixels.iter().enumerate() {
+				new_image.put_pixel(pixel_positions[i][j][k].0, pixel_positions[i][j][k].1, pixel.0);
+			}
+
+			j += 1;
+		}
+
+		i += 1;
+	}
 
 	return new_image;
 }

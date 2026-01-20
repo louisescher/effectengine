@@ -12,13 +12,13 @@ use image::{ColorType, DynamicImage, ImageReader};
 struct EffectEngineCliArgs {
 	effect: ValidEffect,
 	input_path: PathBuf,
-	output_path: Option<PathBuf>
+	output_path: PathBuf
 }
 
 fn main() {
 	let effect = std::env::args().nth(1).expect(format!("No effect given. Please use one of the following effects: {}", VALID_EFFECTS.join(", ")).as_str());
 	let input_path = std::env::args().nth(2).expect("No input image given. Please provide the path to an input image.");
-	let output_path = std::env::args().nth(3);
+	let output_path = std::env::args().nth(3).expect("No output path given. Please provide the path to output the finished image to.");
 	let color_1 = std::env::args().nth(4);
 	let color_2 = std::env::args().nth(5);
 
@@ -43,10 +43,7 @@ fn main() {
 			}
 		},
 		input_path: PathBuf::from(input_path),
-		output_path: match output_path {
-			Some(_) => Some(PathBuf::from(&output_path.unwrap())),
-			None => None
-		}
+		output_path: PathBuf::from(output_path),
 	};
 
 	if !args.input_path.exists() {
@@ -103,11 +100,7 @@ fn main() {
 		}
 	};
 
-	if !args.output_path.is_some() {
-		return;
-	}
-
-	let new_image_res = formatted_new_image.save(args.output_path.unwrap());
+	let new_image_res = formatted_new_image.save(args.output_path);
 
 	match new_image_res {
 		Err(image_error) => {
