@@ -7,7 +7,7 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	let image_height = image.height();
 
 	// How big the pixels in the final image should be
-	let processed_pixel_size: u32 = 128;
+	let processed_pixel_size: u32 = 16;
 
 	let mut new_image = ImageBuffer::new(image_width, image_height);
 

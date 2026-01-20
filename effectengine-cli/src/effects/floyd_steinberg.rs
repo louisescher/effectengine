@@ -34,16 +34,10 @@ pub fn effect(image: &DynamicImage, color_1: Option<String>, color_2: Option<Str
 	let dark_color = hex_to_rgb(dark_color_hex);
 	let light_color = hex_to_rgb(light_color_hex);
 
-	let mut diffusion_array: Vec<i32> = Vec::new();
+	let mut diffusion_array: Vec<i32> = vec![0; image_width+1];
+	let mut diff_array_for_row: Vec<i32> = vec![0; image_width+1];
 	let mut next_diff_err: i32 = 0;
 	let mut current_row: usize = 0;
-	let mut diff_array_for_row: Vec<i32> = Vec::new();
-
-	// Pre-fill both arrays with zeroes so we can already use them on the first row.
-	for _ in 0..image_width+1 {
-		diffusion_array.push(0);
-		diff_array_for_row.push(0);
-	}
 
 	let mut new_image: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::new(image_width as u32, image.height());
 
