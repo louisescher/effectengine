@@ -2,6 +2,7 @@ use image::{DynamicImage, ImageBuffer, Rgba};
 
 use crate::effects::bayer::apply_diffusion_kernel;
 
+/// Applies Bayer dithering to a given image with a 16x16 Bayer matrix.
 pub fn effect(image: &mut DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	let bayer_16_matrix: Vec<Vec<u8>> = vec![
 		 vec![0, 128, 32, 160, 8, 136, 40, 168, 2, 130, 34, 162, 10, 138, 42, 170],

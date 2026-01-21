@@ -16,11 +16,19 @@ struct EffectEngineCliArgs {
 }
 
 fn main() {
+	let collected_args: Vec<String> = std::env::args().collect();
+
+	if
+		collected_args.len() < 2
+		|| (collected_args.contains(&"--help".to_string()) && collected_args.len() < 4)
+		|| (collected_args.contains(&"-h".to_string()) && collected_args.len() < 4) {
+		print_main_help();
+		return;
+	}
+
 	let effect = std::env::args().nth(1).expect(format!("No effect given. Please use one of the following effects: {}", VALID_EFFECTS.join(", ")).as_str());
 	let input_path = std::env::args().nth(2).expect("No input image given. Please provide the path to an input image.");
 	let output_path = std::env::args().nth(3).expect("No output path given. Please provide the path to output the finished image to.");
-	let color_1 = std::env::args().nth(4);
-	let color_2 = std::env::args().nth(5);
 
 	let args = EffectEngineCliArgs {
 		effect: match effect.as_str() {
@@ -32,6 +40,7 @@ fn main() {
 			"pixelate" => ValidEffect::Pixelate,
 			"quantize" => ValidEffect::Quantize,
 			"pixel-sort" => ValidEffect::PixelSort,
+			"kuwahara" => ValidEffect::Kuwahara,
 			_ => {
 				eprintln!("Invalid effect. Please provide one of the following effects as the first argument:");
 
@@ -81,10 +90,11 @@ fn main() {
 		ValidEffect::Bayer4 => bayer_4::effect(&mut input_image),
 		ValidEffect::Bayer8 => bayer_8::effect(&mut input_image),
 		ValidEffect::Bayer16 => bayer_16::effect(&mut input_image),
-		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image, color_1, color_2),
+		ValidEffect::FloydSteinberg => floyd_steinberg::effect(&input_image),
 		ValidEffect::Pixelate => pixelate::effect(&input_image),
 		ValidEffect::Quantize => quantize::effect(&input_image),
-		ValidEffect::PixelSort => pixel_sort::effect(&input_image)
+		ValidEffect::PixelSort => pixel_sort::effect(&input_image),
+		ValidEffect::Kuwahara => kuwahara::effect(&input_image)
 	});
 
 	let formatted_new_image = match input_image.color() {
@@ -111,4 +121,23 @@ fn main() {
 			exit(0);
 		}
 	}
+}
+
+/// Prints the main help command.
+fn print_main_help() {
+	const VERSION: &str = env!("CARGO_PKG_VERSION");
+	println!(r#"
+EffectEngine CLI v{VERSION}
+An image processing utility for various image effects.
+
+USAGE:
+    effectengine-cli <EFFECT> <INPUT_PATH> <OUTPUT_PATH> [SUBCOMMAND]
+
+ARGUMENTS:
+    <EFFECT>        The effect to use. Should be one of:
+{}
+    <INPUT_PATH>    The path to an input image that should be processed.
+    <OUTPUT_PATH>   The path where the resulting image should be saved. Needs
+                    to include the filename.
+	"#, VALID_EFFECTS.map(|effect| format!("                        - {effect}")).join("\n"));
 }

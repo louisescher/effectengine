@@ -1,13 +1,24 @@
+use std::process::exit;
+
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
+use crate::util::subcommand_help_requested;
+
 /// Applies a pixelation filter to an image by combining multiple pixels into bigger ones.
-/// Calculates the average color to do so.
+/// Calculates the average color of each "big pixel" to do so.
 pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+	if subcommand_help_requested() {
+		print_help();
+		exit(0);
+	}
+
 	let image_width = image.width();
 	let image_height = image.height();
 
 	// How big the pixels in the final image should be
-	let processed_pixel_size: u32 = 16;
+	let processed_pixel_size = std::env::args().nth(4).or_else(|| {
+		Some(String::from("16"))
+	}).unwrap().parse().unwrap_or_else(|_| 16);
 
 	let mut new_image = ImageBuffer::new(image_width, image_height);
 
@@ -52,4 +63,23 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	}
 
 	return new_image;
+}
+
+/// Prints the help text for this effect.
+fn print_help() {
+	println!(r#"
+Pixelation Effect
+Applies a pixelation filter to an image by combining multiple pixels into bigger
+ones.
+
+USAGE:
+  effectengine-cli pixelate <INPUT_PATH> <OUTPUT_PATH> [PIXELATION_STRENGTH]
+
+ARGUMENTS:
+  <INPUT_PATH>             The path to an input image that should be processed.
+  <OUTPUT_PATH>            The path where the resulting image should be saved.
+                           Needs to include the filename.
+  [PIXELATION_STRENGTH]    Optional. How strong the pixelation effect should be.
+                           Specifies the size of each big pixel. (Default: 16)
+  "#);
 }

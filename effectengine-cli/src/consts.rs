@@ -1,3 +1,4 @@
+/// A list of all valid effects that can be used as the first CLI argument.
 pub const VALID_EFFECTS: [&'static str; 8] = [
 	"bayer-2",
 	"bayer-4",
@@ -17,5 +18,6 @@ pub enum ValidEffect {
 	FloydSteinberg,
 	Pixelate,
 	Quantize,
-	PixelSort
+	PixelSort,
+	Kuwahara
 }

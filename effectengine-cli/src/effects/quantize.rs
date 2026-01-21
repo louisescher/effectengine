@@ -1,14 +1,65 @@
-use std::{path::PathBuf, process::exit};
+use std::{collections::HashMap, path::PathBuf, process::exit};
 
 use image::{DynamicImage, GenericImageView, ImageBuffer, ImageReader, Rgba};
 
-use crate::util::{hex_to_rgb, is_hex_color, pixel_to_grayscale_value};
+use crate::util::{hex_to_rgb, is_hex_color, pixel_to_grayscale_value, subcommand_help_requested};
 
-/// Tries to quantize a color to one between a given few.
+/// "Quantizes" an image by adjusting the colors to fit a given palette.
+/// Each pixel's color is checked for the lowest perceived distance to
+/// the color palette, then that new color is written to the new image
+/// instead.
 pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+	if subcommand_help_requested() {
+		print_help();
+		exit(0);
+	}
+
 	let image_width = image.width();
 	let image_height = image.height();
 
+	let colors = collect_palette_colors();
+	let mut cache: HashMap<[u8; 4], Rgba<u8>> = HashMap::new();
+
+	let mut new_image = ImageBuffer::new(image_width, image_height);
+
+	for (x, y, pixel) in image.pixels() {
+		let quantized_color = *cache.entry(pixel.0).or_insert_with(|| {
+			find_closest_color(pixel, &colors)
+		});
+
+		new_image.put_pixel(x, y, quantized_color);
+	}
+
+	return new_image;
+}
+
+/// Finds the closest color for a given pixel from a given palette.
+fn find_closest_color(pixel: Rgba<u8>, palette: &Vec<Rgba<u8>>) -> Rgba<u8> {
+	let r1 = pixel.0[0] as f32;
+	let g1 = pixel.0[1] as f32;
+	let b1 = pixel.0[2] as f32;
+
+	let mut min_dist = f32::MAX;
+	let mut closest_color = palette[0];
+
+	for color in palette {
+		let dr = r1 - color[0] as f32;
+		let dg = g1 - color[1] as f32;
+		let db = b1 - color[2] as f32;
+
+		let dist_sq = 0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db;
+
+		if dist_sq < min_dist {
+			min_dist = dist_sq;
+			closest_color = *color;
+		}
+	}
+
+	closest_color
+}
+
+/// Collects the palette colors, either from an input image or from CLI input args.
+fn collect_palette_colors() -> Vec<Rgba<u8>> {
 	let mut colors: Vec<Rgba<u8>> = Vec::new();
 
 	if std::env::args().len() < 5 || std::env::args().len() == 5 && is_hex_color(std::env::args().nth(4).unwrap()) {
@@ -68,55 +119,28 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 		}
 	}
 
-	colors.sort_by(|a, b| {
-		let grayscale_a = pixel_to_grayscale_value((0, 0, *a));
-		let grayscale_b = pixel_to_grayscale_value((0, 0, *b));
+	colors.sort_by_key(|c| pixel_to_grayscale_value((0, 0, *c)));
 
-		grayscale_a.cmp(&grayscale_b)
-	});
-
-	let mut new_image = ImageBuffer::new(image_width, image_height);
-
-	for pixel in image.pixels() {
-		let mut distances: Vec<i32> = Vec::new();
-
-		for color in &colors {
-			let distance = distance_between_colors(pixel.2, *color);
-
-			distances.push(distance);
-		}
-
-		let lowest = distances.iter().min().unwrap().clone();
-		let mut index = 0;
-
-		for value in distances {
-			if value == lowest {
-				break;
-			}
-
-			index += 1;
-		}
-
-		new_image.put_pixel(pixel.0, pixel.1, colors[index]);
-	}
-
-	return new_image;
+	colors
 }
 
-fn distance_between_colors(color_1: Rgba<u8>, color_2: Rgba<u8>) -> i32 {
-	let r1 = color_1.0[0] as f64;
-	let g1 = color_1.0[1] as f64;
-	let b1 = color_1.0[2] as f64;
+/// Prints the help text for this effect.
+fn print_help() {
+	println!(r#"
+Quantization Effect
+"Quantizes" an image by adjusting the colors to fit a given palette.
 
-	let r2 = color_2.0[0] as f64;
-	let g2 = color_2.0[1] as f64;
-	let b2 = color_2.0[2] as f64;
+USAGE:
+  effectengine-cli quantize <INPUT_PATH> <OUTPUT_PATH> [PALETTE_PATH | HEX_CODES...]
 
-	let dr = r1 - r2;
-	let dg = g1 - g2;
-	let db = b1 - b2;
-
-	// Weighted Euclidean distance formula
-	// Weights: Red = 0.299, Green = 0.587, Blue = 0.114
-	(0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db).sqrt().round() as i32
+ARGUMENTS:
+  <INPUT_PATH>      The path to an input image that should be processed.
+  <OUTPUT_PATH>     The path where the resulting image should be saved.
+                    Needs to include the filename.
+  [PALETTE_PATH]    A path to an image, the colors of which should be used as
+                    the base palette for the conversion. A good source for
+                    palettes is https://lospec.com/palette-list!
+  [HEX_CODES...]    A list of hex codes in full format (e.g. #000000 or
+                    #FFFFFF). Minimum two.
+  "#);
 }

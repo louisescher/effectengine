@@ -1,9 +1,23 @@
+use std::process::exit;
+
 use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 
-use crate::util::pixel_to_grayscale_value;
+use crate::util::{pixel_to_grayscale_value, subcommand_help_requested};
 
-/// TODO: Sort in other directions
+/// Sorts all pixels in an image above the image's average brightness
+/// by their brightness value. Results in a tearing-like effect often
+/// used in video games like Cyberpunk 2077.
+///
+/// First, the average brightness is calculated. Afterwards, given
+/// a mode (horizontal, vertical or both), pixels lighter than the
+/// average brightness are prepared to be sorted, then sorted in
+/// intervals.
 pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+	if subcommand_help_requested() {
+		print_help();
+		exit(0);
+	}
+
 	let image_width = image.width();
 	let image_height = image.height();
 
@@ -45,6 +59,8 @@ pub fn effect(image: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
 	return new_image;
 }
 
+/// Sorts given pixels in their intervals and places them at the
+/// original positions on the new image.
 fn sort_pixels(
 	new_image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
 	pixel_positions: Vec<Vec<Vec<(u32, u32)>>>,
@@ -69,6 +85,7 @@ fn sort_pixels(
 	}
 }
 
+/// Calculates which pixels need to be sorted horizontally.
 fn get_horizontal_pixels_to_be_sorted(
 	image: &DynamicImage,
 	new_image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
@@ -121,6 +138,7 @@ fn get_horizontal_pixels_to_be_sorted(
 	(pixel_positions, pixels_to_be_sorted)
 }
 
+/// Calculates which pixels need to be sorted vertically.
 fn get_vertical_pixels_to_be_sorted(
 	image: &DynamicImage,
 	new_image: &mut ImageBuffer<Rgba<u8>, Vec<u8>>,
@@ -165,4 +183,24 @@ fn get_vertical_pixels_to_be_sorted(
 	}
 
 	(pixel_positions, pixels_to_be_sorted)
+}
+
+/// Prints the help text for this effect.
+fn print_help() {
+	println!(r#"
+Pixel Sorting Effect
+Sorts all pixels in an image above the image's average brightness by their
+brightness value.
+
+USAGE:
+  effectengine-cli pixel-sort <INPUT_PATH> <OUTPUT_PATH> [DIRECTION]
+
+ARGUMENTS:
+  <INPUT_PATH>     The path to an input image that should be processed.
+  <OUTPUT_PATH>    The path where the resulting image should be saved.
+                   Needs to include the filename.
+  [DIRECTION]      Optional. The direction the pixels should be sorted in.
+                   Valid options are "horizontal", "vertical" or "both".
+                   (Default: "horizontal")
+  "#);
 }

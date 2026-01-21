@@ -2,21 +2,24 @@ use std::process::exit;
 
 use image::Rgba;
 
-pub fn clamp_to_u8_space(val: i32) -> i32 {
-	if val < 0 {
-		0
-	} else if val > 255 {
-		255
-	} else {
-		val
-	}
-}
-
+/// Checks if a given string is a hexadecimal color. The following requirements need to be
+/// met for the string to be considered a hex color:
+///
+/// 1. The string needs to start with a `#`
+/// 2. All other characters must either be digits (0 - 9) or a character from `a` to `f` (lower- or
+/// uppercase)
 pub fn is_hex_color(str: String) -> bool {
+	// Has to start with a #
 	if !str.starts_with('#') {
 		return false;
 	}
 
+	// All other characters must not be # (needed for the next check to work)
+	if str.clone().split_off(1).contains('#') {
+		return false;
+	}
+
+	// All chars must be a #, a base 10 digit, or an ASCII-Character from a to f or A to F
 	if !str.chars().all(|x| {
 		x == '#'
 		|| x.is_digit(10)
@@ -29,7 +32,10 @@ pub fn is_hex_color(str: String) -> bool {
 	return true;
 }
 
+// Converts a hex color string to an RGBA color value that can be used, for example,
+// when writing to an image.
 pub fn hex_to_rgb(hex: String) -> Rgba<u8> {
+	// Check if the string is a hex color first
 	if !is_hex_color(hex.clone()) {
 		eprintln!("Can't convert non-hex color string!");
 		exit(1);
@@ -59,4 +65,15 @@ pub fn pixel_to_grayscale_value(pixel: (u32, u32, Rgba<u8>)) -> i32 {
 	let (r, g, b) = (pixel_rgb_info[0] as i32, pixel_rgb_info[1] as i32, pixel_rgb_info[2] as i32);
 
 	return (r * 2126 + g * 7152 + b * 722) / 10000;
+}
+
+/// A function to be used in an effect handler to check if a help flag is present.
+pub fn subcommand_help_requested() -> bool {
+	let collected_args: Vec<String> = std::env::args().collect();
+
+	if collected_args.contains(&"--help".to_string()) || collected_args.contains(&"-h".to_string()) {
+		return true;
+	}
+
+	return false;
 }

@@ -7,3 +7,4 @@ pub mod floyd_steinberg;
 pub mod pixelate;
 pub mod quantize;
 pub mod pixel_sort;
+pub mod kuwahara;
