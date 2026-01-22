@@ -1,0 +1,11 @@
+mod bayer;
+pub mod bayer_2;
+pub mod bayer_4;
+pub mod bayer_8;
+pub mod bayer_16;
+pub mod floyd_steinberg;
+pub mod pixelate;
+pub mod quantize;
+pub mod pixel_sort;
+pub mod kuwahara;
+pub mod white_noise;

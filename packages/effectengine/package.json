@@ -1,0 +1,10 @@
+{
+  "name": "effectengine",
+  "private": true,
+  "scripts": {
+    "dev": "watchexec -e rs wasm-pack build --dev",
+    "build": "pnpm build:cli && pnpm build:web",
+    "build:cli": "cargo build -r",
+    "build:web": "wasm-pack build"
+  }
+}

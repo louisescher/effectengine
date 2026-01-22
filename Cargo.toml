@@ -1,3 +1,5 @@
 [workspace]
-members = ["effectengine-cli"]
+members = [
+	"./packages/effectengine",
+]
 resolver = "3"
