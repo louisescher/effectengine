@@ -6,7 +6,7 @@
     "node": "24.13.0"
   },
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "pnpm --parallel dev",
     "build": "pnpm --filter effectengine build && pnpm --filter web build",
     "start": "turbo run start",
     "lint": "biome check ."
