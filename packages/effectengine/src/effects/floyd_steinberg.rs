@@ -1,9 +1,12 @@
-use std::process::exit;
+use std::{io::Cursor, process::exit};
 use wasm_bindgen::prelude::*;
 
-use image::{GenericImageView, DynamicImage, ImageBuffer, Rgba, RgbaImage};
+use image::{DynamicImage, GenericImageView, ImageBuffer, ImageFormat, Rgba};
 
-use crate::util::{hex_to_rgb, is_hex_color, pixel_to_grayscale_value, subcommand_help_requested};
+use crate::util::{hex_to_rgb, is_hex_color, number_to_image_format, pixel_to_grayscale_value};
+
+#[cfg(not(target_arch = "wasm32"))]
+use crate::util::subcommand_help_requested;
 
 /// An implementation of the Floyd-Steinberg dithering algorithm. When a pixel's error is calculated, the
 /// error is diffused down to other pixels with the following pattern (X is the current pixel, the numbers
@@ -21,14 +24,17 @@ use crate::util::{hex_to_rgb, is_hex_color, pixel_to_grayscale_value, subcommand
 /// to the width of the image. Due to the divisor being 16, which is a multiple of two, bit-shifting can
 /// be used for better performance.
 #[wasm_bindgen(js_name = floydSteinberg)]
-pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
-	if subcommand_help_requested() {
-		print_help();
-		exit(0);
+pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+	#[cfg(not(target_arch = "wasm32"))]
+	{
+		if subcommand_help_requested() {
+			print_help();
+			exit(0);
+		}
 	}
 
 	let image = DynamicImage::ImageRgba8(
-		RgbaImage::from_raw(width, height, data.to_vec()).expect("Container should be large enough for the pixels")
+		image::load_from_memory(&data).expect("Failed to decode image from memory").to_rgba8()
 	);
 
 	let pixels = image.pixels();
@@ -103,10 +109,21 @@ pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
 		}
 	}
 
-	return new_image.as_raw().clone();
+	let format = number_to_image_format(image_format);
+	let mut cursor = Cursor::new(Vec::new());
+
+	if format == ImageFormat::Jpeg {
+		let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
+		rgb_image.write_to(&mut cursor, format).expect("Failed to encode JPEG");
+	} else {
+		new_image.write_to(&mut cursor, format).expect("Failed to encode image");
+	}
+
+	return cursor.into_inner();
 }
 
 /// Prints the help text for this effect.
+#[cfg(not(target_arch = "wasm32"))]
 fn print_help() {
 	println!(r#"
 Floyd Steinberg Dithering Effect

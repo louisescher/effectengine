@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use image::Rgba;
+use image::{ImageFormat, Rgba};
 
 /// Checks if a given string is a hexadecimal color. The following requirements need to be
 /// met for the string to be considered a hex color:
@@ -68,6 +68,7 @@ pub fn pixel_to_grayscale_value(pixel: (u32, u32, Rgba<u8>)) -> i32 {
 }
 
 /// A function to be used in an effect handler to check if a help flag is present.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn subcommand_help_requested() -> bool {
 	let collected_args: Vec<String> = std::env::args().collect();
 
@@ -76,4 +77,47 @@ pub fn subcommand_help_requested() -> bool {
 	}
 
 	return false;
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn image_format_to_number(input: ImageFormat) -> u8 {
+	match input {
+		ImageFormat::Avif => 0,
+		ImageFormat::Bmp => 1,
+		ImageFormat::Dds => 2,
+		ImageFormat::Farbfeld => 3,
+		ImageFormat::Gif => 4,
+		ImageFormat::Hdr => 5,
+		ImageFormat::Ico => 6,
+		ImageFormat::Jpeg => 7,
+		ImageFormat::OpenExr => 8,
+		ImageFormat::Png => 9,
+		ImageFormat::Pnm => 10,
+		ImageFormat::Qoi => 11,
+		ImageFormat::Tga => 12,
+		ImageFormat::Tiff => 13,
+		ImageFormat::WebP => 14,
+		_ => panic!("Unknown format!")
+	}
+}
+
+pub fn number_to_image_format(input: u8) -> ImageFormat {
+	match input {
+		0 => ImageFormat::Avif,
+		1 => ImageFormat::Bmp,
+		2 => ImageFormat::Dds,
+		3 => ImageFormat::Farbfeld,
+		4 => ImageFormat::Gif,
+		5 => ImageFormat::Hdr,
+		6 => ImageFormat::Ico,
+		7 => ImageFormat::Jpeg,
+		8 => ImageFormat::OpenExr,
+		9 => ImageFormat::Png,
+		10 => ImageFormat::Pnm,
+		11 => ImageFormat::Qoi,
+		12 => ImageFormat::Tga,
+		13 => ImageFormat::Tiff,
+		14 => ImageFormat::WebP,
+		_ => panic!("Unknown format!")
+	}
 }

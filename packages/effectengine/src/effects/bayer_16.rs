@@ -1,10 +1,10 @@
 use wasm_bindgen::prelude::*;
 
-use crate::effects::bayer::apply_diffusion_kernel;
+use crate::{effects::bayer::apply_diffusion_kernel, util::number_to_image_format};
 
 /// Applies Bayer dithering to a given image with a 16x16 Bayer matrix.
 #[wasm_bindgen(js_name = bayer16)]
-pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
+pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
 	let bayer_16_matrix: Vec<Vec<u8>> = vec![
 		 vec![0, 128, 32, 160, 8, 136, 40, 168, 2, 130, 34, 162, 10, 138, 42, 170],
 		 vec![192, 64, 224, 96, 200, 72, 232, 104, 194, 66, 226, 98, 202, 74, 234, 106],
@@ -28,7 +28,6 @@ pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
 		data,
 		bayer_16_matrix.len(),
 		bayer_16_matrix.into_iter().flatten().collect::<Vec<u8>>(),
-		width,
-		height
+		number_to_image_format(image_format)
 	);
 }

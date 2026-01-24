@@ -1,17 +1,30 @@
+use std::io::Cursor;
+#[cfg(not(target_arch = "wasm32"))]
 use std::process::exit;
 use rand::Rng;
 use wasm_bindgen::prelude::*;
 
-use image::{ImageBuffer, Rgba, RgbaImage};
+use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
+use crate::util::number_to_image_format;
+#[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
+
+#[wasm_bindgen(start)]
+pub fn main_js() {
+  // This ensures that any panic in Rust provides a useful error message in the browser console
+  console_error_panic_hook::set_once();
+}
 
 /// Applies white noise to the given image.
 #[wasm_bindgen(js_name = whiteNoise)]
-pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
-	if subcommand_help_requested() {
-		print_help();
-		exit(0);
+pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+	#[cfg(not(target_arch = "wasm32"))]
+	{
+		if subcommand_help_requested() {
+			print_help();
+			exit(0);
+		}
 	}
 
 	let opacity: i32 = std::env::args().nth(4).or_else(|| {
@@ -20,7 +33,8 @@ pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
 
 	let opacity_factor = opacity as f32 / 255.0;
 
-	let image = RgbaImage::from_raw(width, height, data.to_vec()).expect("Container should be large enough for the pixels");
+	let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+	let image = img.to_rgba8();
 	let mut new_image = ImageBuffer::new(image.width(), image.height());
 
 	for x in 0..image.width() {
@@ -37,11 +51,22 @@ pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
 		}
 	}
 
-	return new_image.as_raw().clone();
+	let format = number_to_image_format(image_format);
+	let mut cursor = Cursor::new(Vec::new());
+
+	if format == ImageFormat::Jpeg {
+		let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
+		rgb_image.write_to(&mut cursor, format).expect("Failed to encode JPEG");
+	} else {
+		new_image.write_to(&mut cursor, format).expect("Failed to encode image");
+	}
+
+	return cursor.into_inner();
 }
 
 
 /// Prints the help text for this effect.
+#[cfg(not(target_arch = "wasm32"))]
 fn print_help() {
 	println!(r#"
 White Noise Effect

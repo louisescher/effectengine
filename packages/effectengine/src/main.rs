@@ -9,6 +9,8 @@ use consts::*;
 use effects::*;
 use image::{ColorType, DynamicImage, ImageBuffer, ImageReader};
 
+use crate::util::image_format_to_number;
+
 struct EffectEngineCliArgs {
 	effect: ValidEffect,
 	input_path: PathBuf,
@@ -76,6 +78,7 @@ fn main() {
 		}
 	};
 
+	let format = input_image_reader.format().unwrap();
 	let input_image_res = input_image_reader.decode();
 
 	let input_image = match input_image_res {
@@ -89,16 +92,16 @@ fn main() {
 	let raw_input_image = input_image.to_rgba8().into_raw();
 
 	let raw_new_image = match args.effect {
-		ValidEffect::Bayer2 => bayer_2::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Bayer4 => bayer_4::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Bayer8 => bayer_8::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Bayer16 => bayer_16::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::FloydSteinberg => floyd_steinberg::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Pixelate => pixelate::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Quantize => quantize::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::PixelSort => pixel_sort::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::Kuwahara => kuwahara::effect(raw_input_image, input_image.width(), input_image.height()),
-		ValidEffect::WhiteNoise => white_noise::effect(raw_input_image, input_image.width(), input_image.height())
+		ValidEffect::Bayer2 => bayer_2::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Bayer4 => bayer_4::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Bayer8 => bayer_8::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Bayer16 => bayer_16::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::FloydSteinberg => floyd_steinberg::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Pixelate => pixelate::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Quantize => quantize::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::PixelSort => pixel_sort::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::Kuwahara => kuwahara::effect(raw_input_image, image_format_to_number(format)),
+		ValidEffect::WhiteNoise => white_noise::effect(raw_input_image, image_format_to_number(format))
 	};
 
 	let new_image = DynamicImage::ImageRgba8(ImageBuffer::from_raw(input_image.width(), input_image.height(), raw_new_image).unwrap());

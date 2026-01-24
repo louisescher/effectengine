@@ -1,8 +1,10 @@
-use std::{ops::Range, process::exit};
+use std::{io::Cursor, ops::Range, process::exit};
 use wasm_bindgen::prelude::*;
 
-use image::{DynamicImage, GenericImageView, ImageBuffer, Luma, Rgba, RgbaImage};
+use image::{DynamicImage, GenericImageView, ImageBuffer, ImageFormat, Luma, Rgba};
 
+use crate::util::number_to_image_format;
+#[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
 
 /// Applies an implementation of the Kuwahara filter to the given image.
@@ -16,14 +18,17 @@ use crate::util::subcommand_help_requested;
 /// computed and then applied to the current pixel, which is the center where all
 /// four quadrants overlap.
 #[wasm_bindgen(js_name = kuwahara)]
-pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
-	if subcommand_help_requested() {
-		print_help();
-		exit(0);
+pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+	#[cfg(not(target_arch = "wasm32"))]
+	{
+		if subcommand_help_requested() {
+			print_help();
+			exit(0);
+		}
 	}
 
 	let image = DynamicImage::ImageRgba8(
-		RgbaImage::from_raw(width, height, data.to_vec()).expect("Container should be large enough for the pixels")
+		image::load_from_memory(&data).expect("Failed to decode image from memory").to_rgba8()
 	);
 	let luma8_image = image.to_luma8();
 
@@ -102,7 +107,17 @@ pub fn effect(data: Vec<u8>, width: u32, height: u32) -> Vec<u8> {
 		}
 	}
 
-	return new_image.as_raw().clone();
+	let format = number_to_image_format(image_format);
+	let mut cursor = Cursor::new(Vec::new());
+
+	if format == ImageFormat::Jpeg {
+		let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
+		rgb_image.write_to(&mut cursor, format).expect("Failed to encode JPEG");
+	} else {
+		new_image.write_to(&mut cursor, format).expect("Failed to encode image");
+	}
+
+	return cursor.into_inner();
 }
 
 /// Calculates the standard deviation for pixels from an image
@@ -162,6 +177,7 @@ fn calculate_std_deviation(data: &Vec<u32>) -> u32 {
 }
 
 /// Prints the help text for this effect.
+#[cfg(not(target_arch = "wasm32"))]
 fn print_help() {
 	println!(r#"
 Kuwahara Filter Effect

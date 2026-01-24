@@ -1,7 +1,10 @@
+use std::io::Cursor;
+#[cfg(not(target_arch = "wasm32"))]
 use std::process::exit;
 
-use image::{ImageBuffer, Rgba, RgbaImage};
+use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
 
 /// An implementation of bayer dithering for colored images. Takes in an image to dither
@@ -15,18 +18,21 @@ pub fn apply_diffusion_kernel(
 	data: Vec<u8>,
 	kernel_size: usize,
 	_kernel: Vec<u8>,
-	width: u32,
-	height: u32
+	image_format: ImageFormat,
 ) -> Vec<u8> {
-	let image = RgbaImage::from_raw(width, height, data.to_vec()).expect("Container should be large enough for the pixels");
+	let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+	let image = img.to_rgba8();
 	let kernel: Vec<Vec<u8>> = _kernel.chunks_exact(kernel_size).map(|x| x.to_vec()).collect();
 
 	let kernel_height = kernel.len() as u32;
 	let kernel_width = kernel[0].len() as u32;
 
-	if subcommand_help_requested() {
-		print_help(kernel_height);
-		exit(0);
+	#[cfg(not(target_arch = "wasm32"))]
+	{
+		if subcommand_help_requested() {
+			print_help(kernel_height);
+			exit(0);
+		}
 	}
 
 	let (image_width, image_height) = image.dimensions();
@@ -47,10 +53,20 @@ pub fn apply_diffusion_kernel(
 		}
 	}
 
-	return new_image.as_raw().clone();
+	let mut cursor = Cursor::new(Vec::new());
+
+	if image_format == ImageFormat::Jpeg {
+		let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
+		rgb_image.write_to(&mut cursor, image_format).expect("Failed to encode JPEG");
+	} else {
+		new_image.write_to(&mut cursor, image_format).expect("Failed to encode image");
+	}
+
+	return cursor.into_inner();
 }
 
 /// Prints the help text for this effect.
+#[cfg(not(target_arch = "wasm32"))]
 fn print_help(matrix_size: u32) {
 	println!(r#"
 Bayer Dithering Effect

@@ -1,4 +1,5 @@
 /// A list of all valid effects that can be used as the first CLI argument.
+#[cfg(not(target_arch = "wasm32"))]
 pub const VALID_EFFECTS: [&'static str; 10] = [
 	"bayer-2",
 	"bayer-4",
@@ -12,6 +13,7 @@ pub const VALID_EFFECTS: [&'static str; 10] = [
 	"white-noise"
 ];
 
+#[cfg(not(target_arch = "wasm32"))]
 pub enum ValidEffect {
 	Bayer2,
 	Bayer4,

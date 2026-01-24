@@ -64,7 +64,7 @@ export function EffectSettings({ effect }: { effect: UsedEffect }) {
 						</SortableItemHandle>
 						<span>{effect.title}</span>
 					</div>
-					<CollapsibleTrigger>
+					<CollapsibleTrigger asChild>
 						<Button variant="ghost" size="icon" className="size-8 ml-auto">
 							{open ? (
 								<ChevronDown className="h-4 w-4" />

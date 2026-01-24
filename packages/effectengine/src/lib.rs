@@ -14,5 +14,3 @@ pub mod effects {
 	pub mod quantize;
 	pub mod white_noise;
 }
-
-pub use consts::VALID_EFFECTS;
