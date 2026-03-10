@@ -1,18 +1,19 @@
 {
-  "name": "root",
-  "private": true,
-  "packageManager": "pnpm@10.26.2",
-  "engines": {
-    "node": "24.13.0"
-  },
-  "scripts": {
-    "dev": "pnpm --parallel dev",
-    "build": "pnpm --filter effectengine build && pnpm --filter web build",
-    "start": "turbo run start",
-    "lint": "biome check ."
-  },
-  "devDependencies": {
-    "turbo": "^2.7.5",
+	"name": "root",
+	"private": true,
+	"packageManager": "pnpm@10.26.2",
+	"engines": {
+		"node": "24.13.0"
+	},
+	"scripts": {
+		"dev": "pnpm --parallel dev",
+		"build": "pnpm --filter effectengine build && pnpm --filter web build",
+		"build:cli": "pnpm --filter effectengine build:cli",
+		"start": "turbo run start",
+		"lint": "biome check ."
+	},
+	"devDependencies": {
+		"turbo": "^2.7.5",
 		"@biomejs/biome": "^2.3.11"
-  }
+	}
 }

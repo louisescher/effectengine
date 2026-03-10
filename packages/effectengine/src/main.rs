@@ -56,7 +56,7 @@ fn main() {
             "white-noise" => ValidEffect::WhiteNoise,
             "scanline" => ValidEffect::ScanLine,
             "bloom" => ValidEffect::Bloom,
-            "chromatic-abberation" => ValidEffect::ChromaticAbberation,
+            "chromatic-aberration" => ValidEffect::ChromaticAberration,
             _ => {
                 eprintln!(
                     "Invalid effect. Please provide one of the following effects as the first argument:"
@@ -131,9 +131,9 @@ fn main() {
         ValidEffect::ScanLine => {
             scanline::effect(encoded_input_image, image_format_to_number(format))
         }
-        ValidEffect::Bloom => scanline::effect(encoded_input_image, image_format_to_number(format)),
-        ValidEffect::ChromaticAbberation => {
-            scanline::effect(encoded_input_image, image_format_to_number(format))
+        ValidEffect::Bloom => bloom::effect(encoded_input_image, image_format_to_number(format)),
+        ValidEffect::ChromaticAberration => {
+            chromatic_aberration::effect(encoded_input_image, image_format_to_number(format))
         }
     };
 

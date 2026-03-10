@@ -17,18 +17,17 @@ use crate::{effects::bayer::apply_diffusion_kernel, util::number_to_image_format
 /// ```
 #[wasm_bindgen(js_name = bayer4)]
 pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
-	let bayer_4_matrix: Vec<Vec<u8>> = vec![
-		vec![0, 128, 32, 160],
-		vec![192, 64, 224, 96],
-		vec![48, 176, 16, 144],
-		vec![240, 112, 208, 80]
-	];
+    let bayer_4_matrix: Vec<Vec<u8>> = vec![
+        vec![0, 128, 32, 160],
+        vec![192, 64, 224, 96],
+        vec![48, 176, 16, 144],
+        vec![240, 112, 208, 80],
+    ];
 
-
-		return apply_diffusion_kernel(
-			data,
-			bayer_4_matrix.len(),
-			bayer_4_matrix.into_iter().flatten().collect::<Vec<u8>>(),
-			number_to_image_format(image_format)
-		);
+    return apply_diffusion_kernel(
+        data,
+        bayer_4_matrix.len(),
+        bayer_4_matrix.into_iter().flatten().collect::<Vec<u8>>(),
+        number_to_image_format(image_format),
+    );
 }

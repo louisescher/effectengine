@@ -3,6 +3,8 @@ pub mod bayer_16;
 pub mod bayer_2;
 pub mod bayer_4;
 pub mod bayer_8;
+pub mod bloom;
+pub mod chromatic_aberration;
 pub mod floyd_steinberg;
 pub mod kuwahara;
 pub mod pixel_sort;

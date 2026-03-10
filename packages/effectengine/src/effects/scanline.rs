@@ -1,4 +1,3 @@
-use rand::Rng;
 use std::io::Cursor;
 #[cfg(not(target_arch = "wasm32"))]
 use std::process::exit;
@@ -17,7 +16,7 @@ pub fn main_js() {
 }
 
 /// Applies white noise to the given image.
-#[wasm_bindgen(js_name = whiteNoise)]
+#[wasm_bindgen(js_name = scanline)]
 pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -32,7 +31,7 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
     let mut new_image = ImageBuffer::new(image.width(), image.height());
 
     let opacity_reduction: u8 = 100;
-    let scanline_measure = 8;
+    let scanline_measure = 2;
 
     for x in 0..image.width() {
         for y in 0..image.height() {
@@ -40,7 +39,7 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
 
             let pixel = image.get_pixel(x, y);
 
-            if is_second_row > (scanline_measure / 2) {
+            if is_second_row > (scanline_measure / 2) - 1 {
                 let r = pixel.0[0].saturating_sub(opacity_reduction);
                 let g = pixel.0[1].saturating_sub(opacity_reduction);
                 let b = pixel.0[2].saturating_sub(opacity_reduction);
@@ -79,7 +78,7 @@ Scanline Effect
 Produces a scanline effect like old CRTs used to do.
 
 USAGE:
-  effectengine-cli white-noise <INPUT_PATH> <OUTPUT_PATH> [OPACITY]
+  effectengine-cli scanline <INPUT_PATH> <OUTPUT_PATH>
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

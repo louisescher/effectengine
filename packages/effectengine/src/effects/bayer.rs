@@ -15,60 +15,81 @@ use crate::util::subcommand_help_requested;
 /// above or below the threshold. Should the channel be above the threshold, it'll be
 /// exaggerated, should the channel be below the threshold, it'll be omitted.
 pub fn apply_diffusion_kernel(
-	data: Vec<u8>,
-	kernel_size: usize,
-	_kernel: Vec<u8>,
-	image_format: ImageFormat,
+    data: Vec<u8>,
+    kernel_size: usize,
+    _kernel: Vec<u8>,
+    image_format: ImageFormat,
 ) -> Vec<u8> {
-	let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
-	let image = img.to_rgba8();
-	let kernel: Vec<Vec<u8>> = _kernel.chunks_exact(kernel_size).map(|x| x.to_vec()).collect();
+    let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+    let image = img.to_rgba8();
+    let kernel: Vec<Vec<u8>> = _kernel
+        .chunks_exact(kernel_size)
+        .map(|x| x.to_vec())
+        .collect();
 
-	let kernel_height = kernel.len() as u32;
-	let kernel_width = kernel[0].len() as u32;
+    let kernel_height = kernel.len() as u32;
+    let kernel_width = kernel[0].len() as u32;
 
-	#[cfg(not(target_arch = "wasm32"))]
-	{
-		if subcommand_help_requested() {
-			print_help(kernel_height);
-			exit(0);
-		}
-	}
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if subcommand_help_requested() {
+            print_help(kernel_height);
+            exit(0);
+        }
+    }
 
-	let (image_width, image_height) = image.dimensions();
+    let (image_width, image_height) = image.dimensions();
 
-	let mut new_image = ImageBuffer::new(image_width, image_height);
+    let mut new_image = ImageBuffer::new(image_width, image_height);
 
-	for y in 0..image_height {
-		for x in 0..image_width {
-			let pixel = image.get_pixel(x, y);
+    for y in 0..image_height {
+        for x in 0..image_width {
+            let pixel = image.get_pixel(x, y);
 
-			let threshold = kernel[(y % kernel_height) as usize][(x % kernel_width) as usize] as f32;
+            let threshold =
+                kernel[(y % kernel_height) as usize][(x % kernel_width) as usize] as f32;
 
-			let r = if (pixel[0] as f32) > threshold { 255 } else { 0 };
-			let g = if (pixel[1] as f32) > threshold { 255 } else { 0 };
-			let b = if (pixel[2] as f32) > threshold { 255 } else { 0 };
+            let r = if (pixel[0] as f32) > threshold {
+                255
+            } else {
+                0
+            };
+            let g = if (pixel[1] as f32) > threshold {
+                255
+            } else {
+                0
+            };
+            let b = if (pixel[2] as f32) > threshold {
+                255
+            } else {
+                0
+            };
 
-			new_image.put_pixel(x, y, Rgba([r, g, b, pixel[3]]));
-		}
-	}
+            new_image.put_pixel(x, y, Rgba([r, g, b, pixel[3]]));
+        }
+    }
 
-	let mut cursor = Cursor::new(Vec::new());
+    let mut cursor = Cursor::new(Vec::new());
 
-	if image_format == ImageFormat::Jpeg {
-		let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
-		rgb_image.write_to(&mut cursor, image_format).expect("Failed to encode JPEG");
-	} else {
-		new_image.write_to(&mut cursor, image_format).expect("Failed to encode image");
-	}
+    if image_format == ImageFormat::Jpeg {
+        let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
+        rgb_image
+            .write_to(&mut cursor, image_format)
+            .expect("Failed to encode JPEG");
+    } else {
+        new_image
+            .write_to(&mut cursor, image_format)
+            .expect("Failed to encode image");
+    }
 
-	return cursor.into_inner();
+    return cursor.into_inner();
 }
 
 /// Prints the help text for this effect.
 #[cfg(not(target_arch = "wasm32"))]
 fn print_help(matrix_size: u32) {
-	println!(r#"
+    println!(
+        r#"
 Bayer Dithering Effect
 Approximates an image using a {matrix_size} by {matrix_size} dithering matrix and
 only full red, green and blue colors in combination.
@@ -80,5 +101,6 @@ ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.
   <OUTPUT_PATH>    The path where the resulting image should be saved.
                    Needs to include the filename.
-  "#);
+  "#
+    );
 }

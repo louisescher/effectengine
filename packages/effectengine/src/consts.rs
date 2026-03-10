@@ -13,7 +13,7 @@ pub const VALID_EFFECTS: [&'static str; 13] = [
     "white-noise",
     "scanline",
     "bloom",
-    "chromatic-abberation",
+    "chromatic-aberration",
 ];
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -30,5 +30,5 @@ pub enum ValidEffect {
     WhiteNoise,
     ScanLine,
     Bloom,
-    ChromaticAbberation,
+    ChromaticAberration,
 }
