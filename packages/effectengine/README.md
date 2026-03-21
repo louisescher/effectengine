@@ -1,4 +1,4 @@
-![EffectEngine](https://github.com/louisescher/effectengine/tree/main/.github/assets/banner.png)
+![EffectEngine](https://raw.githubusercontent.com/louisescher/effectengine/refs/heads/main/.github/assets/banner.png)
 
 # effectengine
 
