@@ -29,15 +29,14 @@ jobs:
           curl -sL https://github.com/crate-ci/cargo-release/releases/latest/download/cargo-release-x86_64-unknown-linux-gnu.tar.gz \
             | tar xz -C ~/.cargo/bin
 
-      - name: Install git-cliff
+      - name: Install cargo-binstall
         run: |
-          curl -sL https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz \
-            | tar xz --strip-components=1 -C ~/.cargo/bin git-cliff-*/git-cliff
+          curl -L --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
+            | bash
 
-      - name: Configure git
-        run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
+      - name: Install cargo-release and git-cliff
+        run: cargo binstall cargo-release git-cliff --no-confirm
 
       - name: Bump version
         id: bump
