@@ -1,21 +1,33 @@
 # Changelog
 
+## effectengine-v0.1.5
 
 ### Bug fixes
 
-- Make sure subcommand help texts work without any arguments provided ([0066f06](https://github.com/louisescher/effectengine/commit/0066f06da706dd9a459aa31dd23e3b91d1e58116))
+- Add banner image to README files
+
+- Banner image link
+
+- Release workflow not attaching files
+
+## effectengine-v0.1.4
+
+### Bug fixes
+
+- Make sure subcommand help texts work without any arguments provided
 
 
 ### Features
 
-- Actions-based release workflow ([c5306d2](https://github.com/louisescher/effectengine/commit/c5306d22e4198482a577681e94cc372affb0c6e9))
+- Actions-based release workflow
 
+## effectengine-v0.1.1
 
 ### Features
 
-- Scanline effect ([f53f144](https://github.com/louisescher/effectengine/commit/f53f144534dbbb77e8dc3b0514957c62f0dadac8))
+- Scanline effect
 
-- Bloom, chromatic aberration effects ([e68b2b4](https://github.com/louisescher/effectengine/commit/e68b2b49f9e6bd5be74eb0cb77da6fb4f8cfa804))
+- Bloom, chromatic aberration effects
 
-- Prep for release ([f7aac11](https://github.com/louisescher/effectengine/commit/f7aac11417a7bc0cea80c7682eddf83099135512))
+- Prep for release
 
