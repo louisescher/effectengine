@@ -1,10 +1,11 @@
 [changelog]
 header = "# Changelog\n\n"
 body = """
+{% if version %}## {{ version }}{% endif %}
 {% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group | upper_first }}
 {% for commit in commits %}
-- {{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/louisescher/effectengine/commit/{{ commit.id }}))
+- {{ commit.message | upper_first }}
 {% endfor %}
 {% endfor %}
 """
@@ -12,9 +13,12 @@ trim = true
 
 [git]
 conventional_commits = true
+filter_unconventional = true
+split_commits = false
 commit_parsers = [
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug fixes" },
     { message = "^docs", group = "Documentation" },
     { message = "^chore", skip = true },
 ]
+tag_pattern = "effectengine-v[0-9].*"

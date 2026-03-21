@@ -103,13 +103,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Compute SHA256 sums
+        run: |
+          cd artifacts
+          sha256sum *.tar.gz *.zip > SHA256SUMS.txt
 
       - name: Extract version
         id: version
         run: |
-          # Read version directly from Cargo.toml
           VERSION=$(grep '^version' packages/effectengine/Cargo.toml | head -1 | cut -d'"' -f2)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=effectengine-v${VERSION}" >> $GITHUB_OUTPUT
@@ -156,7 +167,7 @@ jobs:
       - name: Update formula
         env:
           VERSION: ${{ needs.release.outputs.version }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.release.outputs.tag }}
         run: |
           BASE="https://github.com/louisescher/effectengine/releases/download/${TAG}"
 
@@ -225,7 +236,7 @@ jobs:
       - name: Update manifest
         env:
           VERSION: ${{ needs.release.outputs.version }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.release.outputs.tag }}
         run: |
           BASE="https://github.com/louisescher/effectengine/releases/download/${TAG}"
           URL="${BASE}/effectengine-windows-x86_64.zip"
