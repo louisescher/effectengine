@@ -1,6 +1,6 @@
 sign-commit = false
 sign-tag = false
-push = true
+push = false
 publish = false
 pre-release-commit-message = "chore: release effectengine v{{version}}"
 tag-message = "effectengine v{{version}}"
