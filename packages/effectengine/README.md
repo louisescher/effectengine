@@ -1,3 +1,5 @@
+![EffectEngine](https://github.com/louisescher/effectengine/tree/main/.github/assets/banner.png)
+
 # effectengine
 
 An image editing toolset written in Rust.

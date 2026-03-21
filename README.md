@@ -1,3 +1,5 @@
+![EffectEngine](https://github.com/louisescher/effectengine/tree/main/.github/assets/banner.png)
+
 # EffectEngine Monorepo
 
 This is the monorepo that contains both the `effectengine` CLI and a WIP visual web editor.
