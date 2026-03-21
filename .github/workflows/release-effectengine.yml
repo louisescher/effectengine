@@ -104,6 +104,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
+      - uses: actions/checkout@v6
+
       - name: Extract version
         id: version
         run: |
