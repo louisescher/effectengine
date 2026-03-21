@@ -6,6 +6,7 @@ use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
+use crate::util::{get_paths, read_image};
 
 /// An implementation of bayer dithering for colored images. Takes in an image to dither
 /// and a dithering kernel/bayer matrix that is used for the threshold lookups.
@@ -14,13 +15,12 @@ use crate::util::subcommand_help_requested;
 /// through an image and check whether the R, G, and B component of the pixel are
 /// above or below the threshold. Should the channel be above the threshold, it'll be
 /// exaggerated, should the channel be below the threshold, it'll be omitted.
-pub fn apply_diffusion_kernel(
-    data: Vec<u8>,
-    kernel_size: usize,
-    _kernel: Vec<u8>,
-    image_format: ImageFormat,
-) -> Vec<u8> {
-    let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+pub fn apply_diffusion_kernel(kernel_size: usize, _kernel: Vec<u8>) -> Vec<u8> {
+    let paths = get_paths();
+    let image_data = read_image(paths.input_path);
+
+    let img =
+        image::load_from_memory(&image_data.data).expect("Failed to decode image from memory");
     let image = img.to_rgba8();
     let kernel: Vec<Vec<u8>> = _kernel
         .chunks_exact(kernel_size)
@@ -71,14 +71,14 @@ pub fn apply_diffusion_kernel(
 
     let mut cursor = Cursor::new(Vec::new());
 
-    if image_format == ImageFormat::Jpeg {
+    if image_data.format == ImageFormat::Jpeg {
         let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
         rgb_image
-            .write_to(&mut cursor, image_format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode JPEG");
     } else {
         new_image
-            .write_to(&mut cursor, image_format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode image");
     }
 

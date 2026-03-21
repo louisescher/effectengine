@@ -5,14 +5,14 @@ use wasm_bindgen::prelude::*;
 
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
-use crate::util::number_to_image_format;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
+use crate::util::{get_paths, read_image};
 
 /// Applies a pixelation filter to an image by combining multiple pixels into bigger ones.
 /// Calculates the average color of each "big pixel" to do so.
 #[wasm_bindgen(js_name = pixelate)]
-pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+pub fn effect() -> Vec<u8> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         if subcommand_help_requested() {
@@ -21,7 +21,11 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
         }
     }
 
-    let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+    let paths = get_paths();
+    let image_data = read_image(paths.input_path);
+
+    let img =
+        image::load_from_memory(&image_data.data).expect("Failed to decode image from memory");
     let image = img.to_rgba8();
     let image_width = image.width();
     let image_height = image.height();
@@ -76,17 +80,16 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
         }
     }
 
-    let format = number_to_image_format(image_format);
     let mut cursor = Cursor::new(Vec::new());
 
-    if format == ImageFormat::Jpeg {
+    if image_data.format == ImageFormat::Jpeg {
         let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
         rgb_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode JPEG");
     } else {
         new_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode image");
     }
 

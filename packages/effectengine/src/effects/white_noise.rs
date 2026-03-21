@@ -6,9 +6,9 @@ use wasm_bindgen::prelude::*;
 
 use image::{DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
-use crate::util::number_to_image_format;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
+use crate::util::{get_paths, read_image};
 
 #[wasm_bindgen(start)]
 pub fn main_js() {
@@ -18,7 +18,7 @@ pub fn main_js() {
 
 /// Applies white noise to the given image.
 #[wasm_bindgen(js_name = whiteNoise)]
-pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+pub fn effect() -> Vec<u8> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         if subcommand_help_requested() {
@@ -26,6 +26,9 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
             exit(0);
         }
     }
+
+    let paths = get_paths();
+    let image_data = read_image(paths.input_path);
 
     let opacity: i32 = std::env::args()
         .nth(4)
@@ -36,7 +39,8 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
 
     let opacity_factor = opacity as f32 / 255.0;
 
-    let img = image::load_from_memory(&data).expect("Failed to decode image from memory");
+    let img =
+        image::load_from_memory(&image_data.data).expect("Failed to decode image from memory");
     let image = img.to_rgba8();
     let mut new_image = ImageBuffer::new(image.width(), image.height());
 
@@ -62,17 +66,16 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
         }
     }
 
-    let format = number_to_image_format(image_format);
     let mut cursor = Cursor::new(Vec::new());
 
-    if format == ImageFormat::Jpeg {
+    if image_data.format == ImageFormat::Jpeg {
         let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
         rgb_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode JPEG");
     } else {
         new_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode image");
     }
 

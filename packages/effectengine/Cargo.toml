@@ -1,10 +1,12 @@
 [package]
 name = "effectengine"
 description = "An image editing toolset."
+homepage = "https://github.com/louisescher/effectengine"
 repository = "https://github.com/louisescher/effectengine"
 license = "MIT"
 version = "0.1.0"
 edition = "2024"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib"]

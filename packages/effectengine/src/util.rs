@@ -1,6 +1,8 @@
-use std::process::exit;
+use std::{path::PathBuf, process::exit};
 
-use image::{ImageFormat, Rgba};
+use image::{ImageFormat, ImageReader, Rgba};
+
+use crate::consts::{VALID_EFFECTS, ValidEffect};
 
 /// Checks if a given string is a hexadecimal color. The following requirements need to be
 /// met for the string to be considered a hex color:
@@ -96,45 +98,101 @@ pub fn subcommand_help_requested() -> bool {
     return false;
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub fn image_format_to_number(input: ImageFormat) -> u8 {
-    match input {
-        ImageFormat::Avif => 0,
-        ImageFormat::Bmp => 1,
-        ImageFormat::Dds => 2,
-        ImageFormat::Farbfeld => 3,
-        ImageFormat::Gif => 4,
-        ImageFormat::Hdr => 5,
-        ImageFormat::Ico => 6,
-        ImageFormat::Jpeg => 7,
-        ImageFormat::OpenExr => 8,
-        ImageFormat::Png => 9,
-        ImageFormat::Pnm => 10,
-        ImageFormat::Qoi => 11,
-        ImageFormat::Tga => 12,
-        ImageFormat::Tiff => 13,
-        ImageFormat::WebP => 14,
-        _ => panic!("Unknown format!"),
+pub struct EffectEngineCliArgs {
+    pub input_path: PathBuf,
+    #[allow(dead_code)]
+    pub output_path: PathBuf,
+}
+
+/// Validates a given effect and returns the enum associated with it.
+/// Throws an error and exits if the effect does not exist.
+#[allow(dead_code)]
+pub fn validate_effect(effect: String) -> ValidEffect {
+    match effect.as_str() {
+        "bayer-2" => ValidEffect::Bayer2,
+        "bayer-4" => ValidEffect::Bayer4,
+        "bayer-8" => ValidEffect::Bayer8,
+        "bayer-16" => ValidEffect::Bayer16,
+        "floyd-steinberg" => ValidEffect::FloydSteinberg,
+        "pixelate" => ValidEffect::Pixelate,
+        "quantize" => ValidEffect::Quantize,
+        "pixel-sort" => ValidEffect::PixelSort,
+        "kuwahara" => ValidEffect::Kuwahara,
+        "white-noise" => ValidEffect::WhiteNoise,
+        "scanline" => ValidEffect::ScanLine,
+        "bloom" => ValidEffect::Bloom,
+        "chromatic-aberration" => ValidEffect::ChromaticAberration,
+        _ => {
+            eprintln!(
+                "Invalid effect. Please provide one of the following effects as the first argument:"
+            );
+
+            for valid_effect in VALID_EFFECTS {
+                eprintln!("    - {valid_effect}");
+            }
+
+            exit(64);
+        }
     }
 }
 
-pub fn number_to_image_format(input: u8) -> ImageFormat {
-    match input {
-        0 => ImageFormat::Avif,
-        1 => ImageFormat::Bmp,
-        2 => ImageFormat::Dds,
-        3 => ImageFormat::Farbfeld,
-        4 => ImageFormat::Gif,
-        5 => ImageFormat::Hdr,
-        6 => ImageFormat::Ico,
-        7 => ImageFormat::Jpeg,
-        8 => ImageFormat::OpenExr,
-        9 => ImageFormat::Png,
-        10 => ImageFormat::Pnm,
-        11 => ImageFormat::Qoi,
-        12 => ImageFormat::Tga,
-        13 => ImageFormat::Tiff,
-        14 => ImageFormat::WebP,
-        _ => panic!("Unknown format!"),
+/// Gets the image input and output paths from the arguments passed to the CLI.
+pub fn get_paths() -> EffectEngineCliArgs {
+    let input_path = std::env::args()
+        .nth(2)
+        .expect("No input image given. Please provide the path to an input image.");
+    let output_path = std::env::args()
+        .nth(3)
+        .expect("No output path given. Please provide the path to output the finished image to.");
+
+    let args = EffectEngineCliArgs {
+        input_path: PathBuf::from(input_path),
+        output_path: PathBuf::from(output_path),
+    };
+
+    if !args.input_path.exists() {
+        eprintln!("The given input path was not found.");
+        exit(64);
     }
+
+    if !args.input_path.is_file() {
+        eprintln!("The given input path was not a file.");
+        exit(64);
+    }
+
+    args
+}
+
+pub struct ImageData {
+    pub format: ImageFormat,
+    pub data: Vec<u8>,
+}
+
+pub fn read_image(path: PathBuf) -> ImageData {
+    let image_reader_res = ImageReader::open(&path);
+
+    let image_reader = match image_reader_res {
+        Ok(_) => image_reader_res.unwrap(),
+        Err(_) => {
+            eprintln!("The image at the given path could not be read.");
+            exit(64);
+        }
+    };
+
+    let format = image_reader.format().unwrap();
+
+    let encoded_input_image = match std::fs::read(&path) {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            eprintln!("The image at the given input path could not be read.");
+            exit(64);
+        }
+    };
+
+    let image_data = ImageData {
+        format,
+        data: encoded_input_image,
+    };
+
+    image_data
 }

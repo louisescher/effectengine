@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 
 use image::{DynamicImage, GenericImageView, ImageBuffer, ImageFormat, ImageReader, Rgba};
 
-use crate::util::{hex_to_rgb, is_hex_color, number_to_image_format, pixel_to_grayscale_value};
+use crate::util::{get_paths, hex_to_rgb, is_hex_color, pixel_to_grayscale_value, read_image};
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::util::subcommand_help_requested;
@@ -13,7 +13,7 @@ use crate::util::subcommand_help_requested;
 /// the color palette, then that new color is written to the new image
 /// instead.
 #[wasm_bindgen(js_name = quantize)]
-pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
+pub fn effect() -> Vec<u8> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         if subcommand_help_requested() {
@@ -22,8 +22,11 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
         }
     }
 
+    let paths = get_paths();
+    let image_data = read_image(paths.input_path);
+
     let image = DynamicImage::ImageRgba8(
-        image::load_from_memory(&data)
+        image::load_from_memory(&image_data.data)
             .expect("Failed to decode image from memory")
             .to_rgba8(),
     );
@@ -43,17 +46,16 @@ pub fn effect(data: Vec<u8>, image_format: u8) -> Vec<u8> {
         new_image.put_pixel(x, y, quantized_color);
     }
 
-    let format = number_to_image_format(image_format);
     let mut cursor = Cursor::new(Vec::new());
 
-    if format == ImageFormat::Jpeg {
+    if image_data.format == ImageFormat::Jpeg {
         let rgb_image = DynamicImage::ImageRgba8(new_image).into_rgb8();
         rgb_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode JPEG");
     } else {
         new_image
-            .write_to(&mut cursor, format)
+            .write_to(&mut cursor, image_data.format)
             .expect("Failed to encode image");
     }
 

@@ -1,0 +1,240 @@
+name: Release effectengine
+
+on:
+  push:
+    tags:
+      - "effectengine-v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  BINARY: effectengine
+  PACKAGE_PATH: packages/effectengine
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: effectengine-linux-x86_64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: effectengine-linux-aarch64
+            use_cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: effectengine-macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: effectengine-macos-aarch64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: effectengine-windows-x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+          key: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ matrix.use_cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }} --package ${{ env.BINARY }}
+          else
+            cargo build --release --target ${{ matrix.target }} --package ${{ env.BINARY }}
+          fi
+
+      - name: Package (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          BIN=target/${{ matrix.target }}/release/${{ env.BINARY }}
+          cp "$BIN" ${{ env.BINARY }}
+          tar -czf ${{ matrix.artifact }}.tar.gz ${{ env.BINARY }}
+          zip ${{ matrix.artifact }}.zip ${{ env.BINARY }}
+
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          Copy-Item "target/${{ matrix.target }}/release/${{ env.BINARY }}.exe" "${{ env.BINARY }}.exe"
+          Compress-Archive -Path "${{ env.BINARY }}.exe" -DestinationPath "${{ matrix.artifact }}.zip"
+          tar -czf "${{ matrix.artifact }}.tar.gz" "${{ env.BINARY }}.exe"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            ${{ matrix.artifact }}.tar.gz
+            ${{ matrix.artifact }}.zip
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#effectengine-v}" >> $GITHUB_OUTPUT
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Compute SHA256 sums
+        run: |
+          cd artifacts
+          sha256sum *.tar.gz *.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "effectengine v${{ steps.version.outputs.version }}"
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.zip
+            artifacts/SHA256SUMS.txt
+          generate_release_notes: true
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Authenticate with crates.io
+        uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+
+      - name: Publish
+        run: cargo publish --package effectengine
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  update-homebrew:
+    name: Update Homebrew tap
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: louisescher/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Update formula
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          BASE="https://github.com/louisescher/effectengine/releases/download/${TAG}"
+
+          fetch_sha() {
+            curl -sL "${BASE}/$1" | sha256sum | cut -d' ' -f1
+          }
+
+          SHA_MAC_ARM=$(fetch_sha effectengine-macos-aarch64.tar.gz)
+          SHA_MAC_X86=$(fetch_sha effectengine-macos-x86_64.tar.gz)
+          SHA_LIN_ARM=$(fetch_sha effectengine-linux-aarch64.tar.gz)
+          SHA_LIN_X86=$(fetch_sha effectengine-linux-x86_64.tar.gz)
+
+          cat > Formula/effectengine.rb << EOF
+          class Effectengine < Formula
+            desc "An image editing toolset written in Rust."
+            homepage "https://github.com/louisescher/effectengine"
+            version "${VERSION}"
+
+            on_macos do
+              on_arm do
+                url "${BASE}/effectengine-macos-aarch64.tar.gz"
+                sha256 "${SHA_MAC_ARM}"
+              end
+              on_intel do
+                url "${BASE}/effectengine-macos-x86_64.tar.gz"
+                sha256 "${SHA_MAC_X86}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "${BASE}/effectengine-linux-aarch64.tar.gz"
+                sha256 "${SHA_LIN_ARM}"
+              end
+              on_intel do
+                url "${BASE}/effectengine-linux-x86_64.tar.gz"
+                sha256 "${SHA_LIN_X86}"
+              end
+            end
+
+            def install
+              bin.install "effectengine"
+            end
+
+            test do
+              system "\#{bin}/effectengine", "--version"
+            end
+          end
+          EOF
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git commit -am "effectengine v${VERSION}"
+          git push
+
+  update-scoop:
+    name: Update Scoop bucket
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: louisescher/scoop-bucket
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+
+      - name: Update manifest
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          BASE="https://github.com/louisescher/effectengine/releases/download/${TAG}"
+          URL="${BASE}/effectengine-windows-x86_64.zip"
+          SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+
+          jq \
+            --arg v "$VERSION" \
+            --arg u "$URL" \
+            --arg s "$SHA" \
+            '.version = $v | .architecture["64bit"].url = $u | .architecture["64bit"].hash = $s' \
+            bucket/effectengine.json > tmp.json && mv tmp.json bucket/effectengine.json
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git commit -am "effectengine v${VERSION}"
+          git push
