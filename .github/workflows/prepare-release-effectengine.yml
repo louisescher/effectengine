@@ -1,0 +1,76 @@
+name: Prepare effectengine release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-release and git-cliff
+        run: cargo install cargo-release git-cliff
+
+      - name: Configure git
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+      - name: Bump version
+        id: bump
+        run: |
+          # Get current version
+          CURRENT=$(grep '^version' packages/effectengine/Cargo.toml | head -1 | cut -d'"' -f2)
+
+          # Compute next version using cargo-release
+          cargo release ${{ github.event.inputs.bump }} \
+            --package effectengine \
+            --no-publish \
+            --no-push \
+            --no-tag \
+            --no-confirm \
+            --execute
+
+          NEW=$(grep '^version' packages/effectengine/Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "version=${NEW}" >> $GITHUB_OUTPUT
+
+      - name: Update changelog
+        run: |
+          git-cliff \
+            --config cliff.toml \
+            --tag effectengine-v${{ steps.bump.outputs.version }} \
+            --output packages/effectengine/CHANGELOG.md
+
+      - name: Create release branch and PR
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          BRANCH="release/effectengine-v${VERSION}"
+          git checkout -b "$BRANCH"
+          git add packages/effectengine/Cargo.toml packages/effectengine/CHANGELOG.md Cargo.lock
+          git commit -m "chore: release effectengine v${VERSION}"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "release: effectengine v${VERSION}" \
+            --body "Automated release PR for effectengine v${VERSION}. Merge to publish." \
+            --label "release:effectengine" \
+            --base main \
+            --head "$BRANCH"

@@ -1,9 +1,9 @@
 name: Release effectengine
 
 on:
-  push:
-    tags:
-      - "effectengine-v*"
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -14,9 +14,18 @@ env:
   PACKAGE_PATH: packages/effectengine
 
 jobs:
+  check:
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release:effectengine')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release PR merged
+        run: echo "Release PR merged, proceeding"
   build:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    needs: check
     strategy:
       fail-fast: false
       matrix:
@@ -95,31 +104,25 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Extract version
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#effectengine-v}" >> $GITHUB_OUTPUT
+      steps:
+        - name: Extract version
+          id: version
+          run: |
+            # Read version directly from Cargo.toml
+            VERSION=$(grep '^version' packages/effectengine/Cargo.toml | head -1 | cut -d'"' -f2)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "tag=effectengine-v${VERSION}" >> $GITHUB_OUTPUT
 
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Compute SHA256 sums
-        run: |
-          cd artifacts
-          sha256sum *.tar.gz *.zip > SHA256SUMS.txt
-          cat SHA256SUMS.txt
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: "effectengine v${{ steps.version.outputs.version }}"
-          files: |
-            artifacts/*.tar.gz
-            artifacts/*.zip
-            artifacts/SHA256SUMS.txt
-          generate_release_notes: true
+        - name: Create GitHub Release
+          uses: softprops/action-gh-release@v2
+          with:
+            tag_name: effectengine-v${{ steps.version.outputs.version }}
+            name: "effectengine v${{ steps.version.outputs.version }}"
+            files: |
+              artifacts/*.tar.gz
+              artifacts/*.zip
+              artifacts/SHA256SUMS.txt
+            generate_release_notes: true
 
   publish-crates:
     name: Publish to crates.io
