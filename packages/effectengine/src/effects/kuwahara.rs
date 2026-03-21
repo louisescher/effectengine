@@ -39,7 +39,7 @@ pub fn effect() -> Vec<u8> {
 
     let mut new_image = ImageBuffer::new(image.width(), image.height());
 
-    let window_size: i32 = std::env::args()
+    let mut window_size: i32 = std::env::args()
         .nth(4)
         .or_else(|| Some(String::from("5")))
         .unwrap()
@@ -52,7 +52,7 @@ pub fn effect() -> Vec<u8> {
     }
 
     if window_size % 2 == 0 {
-        eprintln!("Window needs to have an odd width.");
+        window_size = window_size + 1;
     }
 
     let image_width = image.width() as i32;
