@@ -12,9 +12,13 @@ use crate::util::{get_paths, validate_effect};
 fn main() {
     let collected_args: Vec<String> = std::env::args().collect();
 
+    dbg!(&collected_args);
+    dbg!(&collected_args.len());
+    dbg!(&collected_args.len() < &2);
+
     if collected_args.len() < 2
-        || (collected_args.contains(&"--help".to_string()) && collected_args.len() < 4)
-        || (collected_args.contains(&"-h".to_string()) && collected_args.len() < 4)
+        || (collected_args.contains(&"--help".to_string()) && collected_args.len() < 3)
+        || (collected_args.contains(&"-h".to_string()) && collected_args.len() < 3)
     {
         print_main_help();
         return;

@@ -16,12 +16,6 @@ use crate::util::{get_paths, read_image};
 /// above or below the threshold. Should the channel be above the threshold, it'll be
 /// exaggerated, should the channel be below the threshold, it'll be omitted.
 pub fn apply_diffusion_kernel(kernel_size: usize, _kernel: Vec<u8>) -> Vec<u8> {
-    let paths = get_paths();
-    let image_data = read_image(paths.input_path);
-
-    let img =
-        image::load_from_memory(&image_data.data).expect("Failed to decode image from memory");
-    let image = img.to_rgba8();
     let kernel: Vec<Vec<u8>> = _kernel
         .chunks_exact(kernel_size)
         .map(|x| x.to_vec())
@@ -37,6 +31,13 @@ pub fn apply_diffusion_kernel(kernel_size: usize, _kernel: Vec<u8>) -> Vec<u8> {
             exit(0);
         }
     }
+
+    let paths = get_paths();
+    let image_data = read_image(paths.input_path);
+
+    let img =
+        image::load_from_memory(&image_data.data).expect("Failed to decode image from memory");
+    let image = img.to_rgba8();
 
     let (image_width, image_height) = image.dimensions();
 
