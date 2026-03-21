@@ -24,8 +24,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install cargo-release and git-cliff
-        run: cargo install cargo-release git-cliff
+      - name: Install cargo-release
+        run: |
+          curl -sL https://github.com/crate-ci/cargo-release/releases/latest/download/cargo-release-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz -C ~/.cargo/bin
+
+      - name: Install git-cliff
+        run: |
+          curl -sL https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz --strip-components=1 -C ~/.cargo/bin git-cliff-*/git-cliff
 
       - name: Configure git
         run: |
@@ -65,7 +72,13 @@ jobs:
           BRANCH="release/effectengine-v${VERSION}"
           git checkout -b "$BRANCH"
           git add packages/effectengine/Cargo.toml packages/effectengine/CHANGELOG.md Cargo.lock
-          git commit -m "chore: release effectengine v${VERSION}"
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit, changes already included by cargo-release"
+          else
+            git commit -m "chore: release effectengine v${VERSION}"
+          fi
+
           git push origin "$BRANCH"
 
           gh pr create \
