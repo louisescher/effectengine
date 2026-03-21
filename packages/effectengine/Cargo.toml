@@ -9,6 +9,7 @@ edition = "2024"
 readme = "README.md"
 
 [lib]
+name="libeffectengine"
 crate-type = ["cdylib"]
 
 [dependencies]
