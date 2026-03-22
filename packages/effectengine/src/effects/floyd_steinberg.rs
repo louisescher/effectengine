@@ -143,7 +143,7 @@ Floyd Steinberg Dithering Effect
 Approximates an image using only black and white pixels.
 
 USAGE:
-  effectengine-cli floyd-steinberg <INPUT_PATH> <OUTPUT_PATH> [DARK_COLOR] [LIGHT_COLOR]
+  effectengine floyd-steinberg <INPUT_PATH> <OUTPUT_PATH> [DARK_COLOR] [LIGHT_COLOR]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

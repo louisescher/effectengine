@@ -224,7 +224,7 @@ Sorts all pixels in an image above the image's average brightness by their
 brightness value.
 
 USAGE:
-  effectengine-cli pixel-sort <INPUT_PATH> <OUTPUT_PATH> [DIRECTION]
+  effectengine pixel-sort <INPUT_PATH> <OUTPUT_PATH> [DIRECTION]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

@@ -37,7 +37,7 @@ Binaries are available via this repo's [GitHub Releases](https://github.com/loui
 
 ```
 USAGE:
-    effectengine-cli <EFFECT> <INPUT_PATH> <OUTPUT_PATH> [SUBCOMMAND]
+    effectengine <EFFECT> <INPUT_PATH> <OUTPUT_PATH> [SUBCOMMAND]
 
 ARGUMENTS:
     <EFFECT>        The effect to use.

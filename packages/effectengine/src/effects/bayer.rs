@@ -96,7 +96,7 @@ Approximates an image using a {matrix_size} by {matrix_size} dithering matrix an
 only full red, green and blue colors in combination.
 
 USAGE:
-  effectengine-cli bayer-{matrix_size} <INPUT_PATH> <OUTPUT_PATH>
+  effectengine bayer-{matrix_size} <INPUT_PATH> <OUTPUT_PATH>
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

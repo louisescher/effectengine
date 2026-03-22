@@ -108,7 +108,7 @@ Simulates lens colour fringing by displacing the R, G, and B channels
 radially outward/inward from the centre of the image.
 
 USAGE:
-  effectengine-cli chromatic-aberration <INPUT_PATH> <OUTPUT_PATH> [STRENGTH]
+  effectengine chromatic-aberration <INPUT_PATH> <OUTPUT_PATH> [STRENGTH]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

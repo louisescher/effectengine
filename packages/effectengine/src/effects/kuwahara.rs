@@ -104,8 +104,8 @@ pub fn effect() -> Vec<u8> {
             };
 
             let mut pixels: Vec<[u8; 4]> = Vec::new();
-            for z in min_std.0.0 {
-                for w in min_std.0.1.clone() {
+            for z in min_std.0 .0 {
+                for w in min_std.0 .1.clone() {
                     pixels.push(image.get_pixel(z as u32, w as u32).0);
                 }
             }
@@ -202,7 +202,7 @@ Applies a filter usually used for noise reduction which makes images look
 like they were painted.
 
 USAGE:
-  effectengine-cli kuwahara <INPUT_PATH> <OUTPUT_PATH> [WINDOW_SIZE]
+  effectengine kuwahara <INPUT_PATH> <OUTPUT_PATH> [WINDOW_SIZE]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

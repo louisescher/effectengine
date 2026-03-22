@@ -155,7 +155,7 @@ Produces a gaussian blur bloom effect by blurring the image and additively
 blending the result back onto the original.
 
 USAGE:
-  effectengine-cli bloom <INPUT_PATH> <OUTPUT_PATH> [SIGMA]
+  effectengine bloom <INPUT_PATH> <OUTPUT_PATH> [SIGMA]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

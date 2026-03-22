@@ -168,7 +168,7 @@ Quantization Effect
 "Quantizes" an image by adjusting the colors to fit a given palette.
 
 USAGE:
-  effectengine-cli quantize <INPUT_PATH> <OUTPUT_PATH> [PALETTE_PATH | HEX_CODES...]
+  effectengine quantize <INPUT_PATH> <OUTPUT_PATH> [PALETTE_PATH | HEX_CODES...]
 
 ARGUMENTS:
   <INPUT_PATH>      The path to an input image that should be processed.

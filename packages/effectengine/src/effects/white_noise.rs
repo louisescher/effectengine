@@ -91,7 +91,7 @@ White Noise Effect
 Overlays an image with white noise at a given opacity.
 
 USAGE:
-  effectengine-cli white-noise <INPUT_PATH> <OUTPUT_PATH> [OPACITY]
+  effectengine white-noise <INPUT_PATH> <OUTPUT_PATH> [OPACITY]
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.

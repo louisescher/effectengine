@@ -12,10 +12,6 @@ use crate::util::{get_paths, validate_effect};
 fn main() {
     let collected_args: Vec<String> = std::env::args().collect();
 
-    dbg!(&collected_args);
-    dbg!(&collected_args.len());
-    dbg!(&collected_args.len() < &2);
-
     if collected_args.len() < 2
         || (collected_args.contains(&"--help".to_string()) && collected_args.len() < 3)
         || (collected_args.contains(&"-h".to_string()) && collected_args.len() < 3)
@@ -74,7 +70,7 @@ EffectEngine CLI v{VERSION}
 An image processing utility for various image effects.
 
 USAGE:
-    effectengine-cli <EFFECT> <INPUT_PATH> <OUTPUT_PATH> [SUBCOMMAND]
+    effectengine <EFFECT> <INPUT_PATH> <OUTPUT_PATH> [SUBCOMMAND]
 
 ARGUMENTS:
     <EFFECT>        The effect to use. Should be one of:

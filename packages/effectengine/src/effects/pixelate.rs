@@ -106,7 +106,7 @@ Applies a pixelation filter to an image by combining multiple pixels into bigger
 ones.
 
 USAGE:
-  effectengine-cli pixelate <INPUT_PATH> <OUTPUT_PATH> [PIXELATION_STRENGTH]
+  effectengine pixelate <INPUT_PATH> <OUTPUT_PATH> [PIXELATION_STRENGTH]
 
 ARGUMENTS:
   <INPUT_PATH>             The path to an input image that should be processed.

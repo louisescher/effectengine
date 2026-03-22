@@ -81,7 +81,7 @@ Scanline Effect
 Produces a scanline effect like old CRTs used to do.
 
 USAGE:
-  effectengine-cli scanline <INPUT_PATH> <OUTPUT_PATH>
+  effectengine scanline <INPUT_PATH> <OUTPUT_PATH>
 
 ARGUMENTS:
   <INPUT_PATH>     The path to an input image that should be processed.
