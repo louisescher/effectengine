@@ -1,5 +1,11 @@
 # Changelog
 
+## effectengine-v0.1.6
+
+### Bug fixes
+
+- Revert to 0.1.5 after failed workflow
+
 ## effectengine-v0.1.5
 
 ### Bug fixes
@@ -9,6 +15,8 @@
 - Banner image link
 
 - Release workflow not attaching files
+
+- Wrong CLI executable name
 
 ## effectengine-v0.1.4
 
